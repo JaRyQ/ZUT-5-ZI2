@@ -6,8 +6,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.swing.text.html.parser.Entity;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -82,14 +84,8 @@ public class App {
                 tr.setCl(classes.get(i++));
             }
           }
+
     public static void main(String [] args) {
-
-        //inicjalizaja entity managera
-        System.out.println("LAB 5 ");
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("moja-baza");
-        EntityManager em = emf.createEntityManager();
-
-       em.getTransaction().begin();
 
 
         //tworzenie listy uczniów
@@ -98,8 +94,8 @@ public class App {
                 "Fabian", "Gabriel", "Harold", "Elvis", "Karl",
                 "Emma", "Ella", "Devin", "Avery", "Mathew"};
         String familynames[] = new String[]{
-                "Nowak", "Kowalski", "Błaszczykowski", "Kowal", "Lewandowski",
-                "Malarz", "Zabka", "Podgorzała", "Presley", "Kani",
+                "Nowak", "Kowalski", "Blaszczykowski", "Kowal", "Lewandowski",
+                "Malarz", "Zabka", "Podgorzala", "Presley", "Kani",
                 "Mrozonka", "Pilot", "Patton", "English", "Moodem"};
         List<Student> students= CreateStudents(names, familynames);
 
@@ -128,7 +124,50 @@ public class App {
             System.out.println(cl.getName());
             cl.printModules();
         }
-       em.getTransaction().commit();
+        //inicjalizaja entity managera
+        System.out.println("LAB 5 ");
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("moja-baza");
+        EntityManager em = emf.createEntityManager();
+
+        //dodawanie encji do bazy danych
+
+        em.getTransaction().begin();
+        for (Iterator<Student> it = students.iterator(); it.hasNext();) {
+            Student enquiry = it.next();
+            em.persist(enquiry);
+            em.flush();
+            em.clear();
+        }
+        em.getTransaction().commit();
+
+     em.getTransaction().begin();
+        for (Iterator<Teacher> it = teachers.iterator(); it.hasNext();) {
+            Teacher enquiry4 = it.next();
+            em.persist(enquiry4);
+     //       em.flush();
+      //      em.clear();
+        }
+        em.getTransaction().commit();
+  /*
+        //em.getTransaction().begin();
+        for (Iterator<Module> it = modules.iterator(); it.hasNext();) {
+            Module enquiry2 = it.next();
+            em.persist(enquiry2);
+            em.flush();
+            em.clear();
+        }
+      //  em.getTransaction().commit();
+
+        //em.getTransaction().begin();
+        for (Iterator<Classes> it = classes.iterator(); it.hasNext();) {
+            Classes enquiry3 = it.next();
+            em.persist(enquiry3);
+            em.flush();
+            em.clear();
+        }
+        em.getTransaction().commit();
+*/
+
 /*
         //dla wybranej osoby ucznia wyświetlić jej przedmiot
         em.getTransaction().begin();
