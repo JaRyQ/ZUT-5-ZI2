@@ -8,187 +8,136 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.swing.text.html.parser.Entity;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 
 public class App {
 
-    private  static List<Student> CreateStudents(String [] names, String[] surnames){
-        List<Student> students = new ArrayList<Student>();
-        for(int i = 0; i < names.length; i++) {
-            Student st = new Student();
-            st.setFirstName(names[i]);
-            st.setFamilyName(surnames[i]);
-            students.add(st);
-
-        }
-        return students;
-    }
-
-   private static List<Teacher> CreateTeachers(String [] names, String [] surnames,String [] titles ){
-       List<Teacher> teachers = new ArrayList<Teacher>();
-       for(int i = 0; i < names.length; i++) {
-           Teacher tr = new Teacher();
-           tr.setFirstName(names[i]);
-           tr.setFamilyName(surnames[i]);
-           tr.setTitle(titles[i]);
-           teachers.add(tr);
-
-       }
-
-       return teachers;
-   }
-
-      private static List<Classes> CreateClasses(String [] names, String[] levels, List<Student> students){
-        List<Classes> classes = new ArrayList<Classes>();
-          for(int i = 0; i < names.length; i++) {
-              Classes cls = new Classes();
-              cls.setLevel(levels[i]);
-              cls.setName(names[i]);
-              cls.setStudents(students.subList(i*5,(i+1) * 5 -1)); //przypisanie uczniów do klas
-              classes.add(cls);
-          }
-          return classes;
-       }
-
-          private static List<Module> CreateModules(String [] names, List<Teacher> mentors) {
-              List<Module> modules = new ArrayList<Module>();
-              for(int i = 0; i < names.length; i++) {
-                  Module md = new Module();
-                  md.setName(names[i]);
-                  int signed_mentor = 0 + (int) (new Random().nextFloat() * 3 );
-                  md.setMentor(mentors.get(signed_mentor)); //przypisanie mentora do modułu
-                  modules.add(md);
-              }
-              return modules;
-          }
-
-          private static void AssignModulesToClasses(List<Module> modules, List<Classes> classes){
-
-            for(Classes cls : classes){
-                List<Module>md = new ArrayList<Module>();
-                for(int i=0 ; i<5;i++){
-                    int signed_module = 0 + (int) (new Random().nextFloat() * 12 );
-                    md.add(modules.get(signed_module));
-                }
-                cls.setModules(md);
-            }
-          }
-
-          private static void AssignClassesToTeacher(List<Classes> classes, List<Teacher> teachers){
-            int i =0;
-            for(Teacher tr : teachers){
-                tr.setCl(classes.get(i++));
-            }
-          }
 
     public static void main(String [] args) {
 
-
-        //tworzenie listy uczniów
-        String names[] = new String[]{
-                "Aaron", "Adam", "Caleb", "Dale", "Earl",
-                "Fabian", "Gabriel", "Harold", "Elvis", "Karl",
-                "Emma", "Ella", "Devin", "Avery", "Mathew"};
-        String familynames[] = new String[]{
-                "Nowak", "Kowalski", "Blaszczykowski", "Kowal", "Lewandowski",
-                "Malarz", "Zabka", "Podgorzala", "Presley", "Kani",
-                "Mrozonka", "Pilot", "Patton", "English", "Moodem"};
-        List<Student> students= CreateStudents(names, familynames);
-
-        //tworzenie listy nauczycieli
-        String teacher_names[] = new String[]{"Jan", "Robert", "Anna"};
-        String techer_surnames[] = new String[]{"Wielki", "Pochmurny", "Strzelka"};
-        String titles[] = new String[]{"dr", "mgr", "prof."};
-        List<Teacher> teachers = CreateTeachers(teacher_names,techer_surnames,titles);
-
-        //tworzenie listy klas szkolnych
-        String class_names [] = new String[]{"A","B", "C"};
-        String class_levels[] = new String[]{"4", "6", "1"};
-        List<Classes> classes = CreateClasses(class_names,class_levels, students);
-
-        //tworzenie listy modułów
-        String module_names[] = new String[]{"Matematyka", "Polski", "Angielski", "Rosyjski", "Informatyka", "WF", "Basen",
-        "Historia", "Plastyka", "Biologia", "Chemia", "Fizyka", "WOS"};
-        List<Module> modules = CreateModules(module_names, teachers);
-
-        //przypisanie modułów do klas
-        AssignModulesToClasses(modules,classes);
-
-        //przypisanie klasy do nauczyciela
-        AssignClassesToTeacher(classes, teachers);
-        for(Classes cl :classes){
-            System.out.println(cl.getName());
-            cl.printModules();
-        }
-        //inicjalizaja entity managera
+        //initialize entity manager
         System.out.println("LAB 5 ");
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("moja-baza");
         EntityManager em = emf.createEntityManager();
 
-        //dodawanie encji do bazy danych
+        //creating grouped students
+        Student [] firstClassStudents = new Student[]{
+                new Student("Aaron","Nowak"),
+                new Student("Adam","Kowalski"),
+                new Student("Caleb","Blaszczykowski"),
+                new Student("Dale","Lewandowski"),
+                new Student("Earl","Nowak"),
+        };
 
+        Student [] secondClassStudents = new Student[]{
+                new Student("Fabian","Malarz"),
+                new Student("Gabriel","Zabka"),
+                new Student("Harold","Podgorzala"),
+                new Student("Elvis","Presley"),
+                new Student("Karl","Kani"),
+        };
+        Student [] thirdClassStudents = new Student[]{
+                new Student("Emma","Mrozonka"),
+                new Student("Ella","Pilot"),
+                new Student("Devin","Patton"),
+                new Student("Avery","English"),
+                new Student("Mathew","Moodem"),
+        };
+        //opening transaction
         em.getTransaction().begin();
-        for (Iterator<Student> it = students.iterator(); it.hasNext();) {
-            Student enquiry = it.next();
-            em.persist(enquiry);
-            em.flush();
-            em.clear();
-        }
+
+        //creating school modules -> class mentors -> classes
+        //fist group
+        Module math = new Module("Math");
+        Module polish =  new Module("Polish");
+        Module english =  new Module("English");
+        Module history =  new Module("History");
+
+        Teacher firstTeacher = new Teacher("Rob", "Pochmurny","mgr",
+                List.of(math,polish,english, history));
+        math.setMentor(firstTeacher);
+        polish.setMentor(firstTeacher);
+        english.setMentor(firstTeacher);
+        history.setMentor(firstTeacher);
+
+        em.persist(firstTeacher);
+        em.flush();
+
+        Classes firstClass = new Classes("A", "1", firstTeacher, List.of(math,polish,english, history),
+                Arrays.asList(firstClassStudents));
+        em.persist(firstClass);
+        em.flush();
+//------------------------------------------------------------------------------------
+        //second group
+        Module art =  new Module("Art");
+        Module biology =  new Module("Biology");
+        Module chemistry =  new Module("Chemistry");
+        Module physics =  new Module("Physics");
+
+        Teacher secondTeacher = new Teacher("Jan", "Wielki","dr",
+                List.of(art,biology,chemistry, physics));
+        art.setMentor(secondTeacher);
+        biology.setMentor(secondTeacher);
+        chemistry.setMentor(secondTeacher);
+        physics.setMentor(secondTeacher);
+
+        em.persist(secondTeacher);
+        em.flush();
+
+        Classes secondClass = new Classes("B", "4", secondTeacher,
+                List.of(art,biology,chemistry, physics),
+                Arrays.asList(secondClassStudents));
+        em.persist(secondClass);
+        em.flush();
+//--------------------------------------------------------------------------------------------------------------
+        //third group
+        Module pe =  new Module("PE");
+        Module it =  new Module("IT");
+        Module geo =  new Module("Geography");
+        Module economy =  new Module("Economy");
+
+        Teacher thirdTeacher = new Teacher("Anna", "Strzelka","prof.",
+                List.of(pe,it,geo, economy));
+        pe.setMentor(thirdTeacher);
+        it.setMentor(thirdTeacher);
+        geo.setMentor(thirdTeacher);
+        economy.setMentor(thirdTeacher);
+
+        em.persist(thirdTeacher);
+        em.flush();
+
+        Classes thirdClass = new Classes("C", "6", thirdTeacher,
+                List.of(pe,it,geo, economy),
+                Arrays.asList(thirdClassStudents));
+        em.persist(thirdClass);
+        em.flush();
+
         em.getTransaction().commit();
 
-     em.getTransaction().begin();
-        for (Iterator<Teacher> it = teachers.iterator(); it.hasNext();) {
-            Teacher enquiry4 = it.next();
-            em.persist(enquiry4);
-     //       em.flush();
-      //      em.clear();
-        }
-        em.getTransaction().commit();
-  /*
-        //em.getTransaction().begin();
-        for (Iterator<Module> it = modules.iterator(); it.hasNext();) {
-            Module enquiry2 = it.next();
-            em.persist(enquiry2);
-            em.flush();
-            em.clear();
-        }
-      //  em.getTransaction().commit();
 
-        //em.getTransaction().begin();
-        for (Iterator<Classes> it = classes.iterator(); it.hasNext();) {
-            Classes enquiry3 = it.next();
-            em.persist(enquiry3);
-            em.flush();
-            em.clear();
-        }
-        em.getTransaction().commit();
-*/
 
-/*
-        //dla wybranej osoby ucznia wyświetlić jej przedmiot
-        em.getTransaction().begin();
-        Query q = em.createQuery("SELECT Module FROM Classes cl WHERE Student IN ");
+        //dla wybranej (poprzez id )osoby ucznia wyświetlić jej przedmiot
+        Query q = em.createQuery("SELECT student FROM Student student where student.id = 5");
+        Student student = (Student) q.getSingleResult();
+        System.out.println("\n\nResulted student =>"+student.getNickName()+' '+student.getClasses().getName()+ student.getClasses().getLevel());
+       for(Module md : student.getClasses().getModules()){
+           System.out.println(md.getId()+" "+md.getName()+" "+md.getMentor().getNickName());
+       }
 
-        List<Module> student_modules = (List<Module>) q.getResultList();
-        for(Module md: student_modules){
-            System.out.println(md.getId() + " "+ md.getName() +" "+ md.getMentor().getNickName());
-        }
-        em.getTransaction().commit();
+
 
 
       //dla wybranego nauczyciela wyświetlić wszystkich jego uczniów z klas, z którymi ma realizuje przedmioty.
 
-        em.getTransaction().begin();
-        Query q = em.createQuery("SELECT p FROM Person p WHERE p.age < 18");
-        List<Student> teacher_students = (List<Student>) q.getResultList();
+        System.out.println("\n\nstudents of teacher with id equal to 3");
+        Query q2 = em.createQuery("SELECT  student FROM Student student " +
+                "inner join student.classes classes where classes.mentor.id = 3");
+       List<Student> teacher_students = (List<Student>) q2.getResultList();
         for(Student st: teacher_students){
             System.out.println(st.getId() + " "+ st.getNickName());
         }
-        em.getTransaction().commit();*/
+
 
 
 
